@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Najem Gotowy: lista kontrolna, regulamin i kalkulator dla właścicieli lokali na najem krótkoterminowy.">
+</head>
+<body>
+<title>Najem Gotowy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Układ: wąski pasek nazwy i statusu prawa, pod nim zakładki; w zakładkach formularz po lewej, wynik po prawej (na telefonie jedna kolumna). */
+:root {
+  --bg: #f2f5f4; --surface: #ffffff; --surface2: #e7eeec; --fg: #14201f; --muted: #4f605e; --line: #cbd7d5;
+  --brand: #0b6e68; --brand-fg: #ffffff; --brand-soft: #d9efec;
+  --warn: #8f4f00; --warn-bg: #fbefd9; --bad: #a32a2a; --bad-bg: #fbe5e3; --ok: #1d6f40; --ok-bg: #dcf1e4;
+  --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1918; --surface: #14231f; --surface2: #1b2d2a; --fg: #e5eeec; --muted: #9db2af; --line: #2a3f3b;
+    --brand: #4fc3b8; --brand-fg: #06201e; --brand-soft: #173a36;
+    --warn: #f0b35a; --warn-bg: #33270f; --bad: #ff9a95; --bad-bg: #3a1a19; --ok: #72d79d; --ok-bg: #12301f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1918; --surface: #14231f; --surface2: #1b2d2a; --fg: #e5eeec; --muted: #9db2af; --line: #2a3f3b;
+  --brand: #4fc3b8; --brand-fg: #06201e; --brand-soft: #173a36;
+  --warn: #f0b35a; --warn-bg: #33270f; --bad: #ff9a95; --bad-bg: #3a1a19; --ok: #72d79d; --ok-bg: #12301f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font-body); padding-inline: 16px; padding-block: 20px 56px; }
+.wrap { max-width: 1080px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.1rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.25rem; font-weight: 650; }
+h3 { font-size: 1.02rem; font-weight: 650; }
+p { margin: 0; }
+a { color: var(--brand); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand svg { flex: none; color: var(--brand); }
+.brand p { color: var(--muted); font-size: 0.9rem; }
+.theme { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; }
+
+.status { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.status strong { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.status span { color: var(--fg); font-size: 0.92rem; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--line); }
+.tab { background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted); font: 600 0.95rem var(--font-body); padding: 10px 14px; cursor: pointer; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--brand); }
+.panel[hidden] { display: none !important; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 460px) { .fields { grid-template-columns: minmax(0, 1fr); } }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+input, select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+.hint { font-size: 0.8rem; color: var(--muted); }
+.note { font-size: 0.82rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 12px; }
+
+.meter { display: flex; flex-direction: column; gap: 8px; }
+.meter-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.big { font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.bar { height: 10px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--brand); border-radius: 99px; }
+.pair { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.88rem; color: var(--muted); }
+.pair b { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+.tasks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.task { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
+.task.done { background: var(--surface2); }
+.task.done h3 { text-decoration: line-through; color: var(--muted); }
+.task.high:not(.done) { border-color: var(--bad); }
+.task header { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.task p { font-size: 0.88rem; color: var(--muted); }
+.tag { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 4px; padding: 2px 6px; border: 1px solid currentColor; white-space: nowrap; }
+.tag.dzis { background: var(--brand); color: var(--brand-fg); border-color: var(--brand); }
+.tag.projekt { color: var(--warn); }
+.tag.prio-wysoki { color: var(--bad); }
+.tag.prio-średni { color: var(--warn); }
+.tag.prio-niski { color: var(--muted); }
+.tag.ok { color: var(--ok); }
+
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.stat span { font-size: 0.78rem; color: var(--muted); }
+.stat b { font-family: var(--font-display); font-size: 1.35rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat.good b { color: var(--ok); }
+.stat.bad b { color: var(--bad); }
+.callout { border-radius: 10px; padding: 12px 14px; font-size: 0.9rem; }
+.callout.warn { background: var(--warn-bg); color: var(--fg); border: 1px solid var(--warn); }
+.callout.bad { background: var(--bad-bg); color: var(--fg); border: 1px solid var(--bad); }
+.callout.ok { background: var(--ok-bg); color: var(--fg); border: 1px solid var(--ok); }
+
+.doc { background: #fff; color: #111; border: 1px solid var(--line); border-radius: 6px; padding: 24px; font-family: Georgia, 'Times New Roman', serif; line-height: 1.5; display: flex; flex-direction: column; gap: 12px; }
+.doc h2 { font-family: Georgia, serif; text-align: center; letter-spacing: 0.06em; font-size: 1.2rem; }
+.doc h3 { font-family: Georgia, serif; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.doc p { font-size: 0.95rem; }
+.doc .foot { font-size: 0.75rem; color: #555; border-top: 1px solid #ccc; padding-top: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { background: var(--brand); color: var(--brand-fg); border: 1px solid var(--brand); border-radius: 8px; padding: 9px 14px; font: 600 0.9rem var(--font-body); cursor: pointer; }
+.btn.alt { background: var(--surface); color: var(--fg); border-color: var(--line); }
+.timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.timeline li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 460px) { .timeline li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.timeline time { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; }
+.timeline small { display: block; color: var(--muted); }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; font-size: 0.92rem; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.sources { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; margin: 0; }
+.sources a { overflow-wrap: anywhere; }
+
+@media print {
+  body { background: #fff; padding: 0; }
+  .top, .status, .tabs, .actions, .no-print, .grid > .card:first-child { display: none !important; }
+  .panel { display: none !important; }
+  .panel.print-active { display: block !important; }
+  .grid { display: block; }
+  .doc { border: 0; padding: 0; }
+}
+@media (prefers-reduced-motion: no-preference) { .bar > i { transition: width 0.3s ease; } }
+
+.lic { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-block: 12px; font-size: 0.9rem; }
+.lic > div { min-width: 0; flex: 1 1 260px; }
+.lic form { display: flex; flex-wrap: wrap; gap: 8px; }
+.lic input { min-width: 0; flex: 1 1 160px; font: 500 0.9rem var(--font-mono); padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); text-transform: uppercase; }
+.lock { border: 1px dashed var(--warn); background: var(--warn-bg); border-radius: 10px; padding: 14px; margin-top: 12px; }
+.lock h3 { margin: 0 0 6px; }
+.lock p { margin: 0 0 10px; }
+.btn[disabled], .btn.off { opacity: 0.55; cursor: not-allowed; }
+
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M5 19 20 6l15 13v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V19Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="m13.5 24.5 4.5 4.5 9-10" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><h1>Najem Gotowy</h1><p>Sprawdź, czy Twój lokal jest gotowy na nowe zasady najmu krótkoterminowego.</p></div>
+    </div>
+    <button class="theme no-print" id="themeBtn" type="button">Zmień motyw</button>
+  </header>
+  <div id="licBar" class="no-print"></div>
+
+  <div class="status" role="note">
+    <strong>Stan prawny na <span id="asOf"></span></strong>
+    <span id="billStatus"></span>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Sekcje">
+    <button class="tab" role="tab" id="t-ready" aria-controls="p-ready" aria-selected="true" data-tab="ready">Gotowość</button>
+    <button class="tab" role="tab" id="t-reg" aria-controls="p-reg" aria-selected="false" data-tab="reg">Regulamin</button>
+    <button class="tab" role="tab" id="t-tax" aria-controls="p-tax" aria-selected="false" data-tab="tax">Opłacalność</button>
+    <button class="tab" role="tab" id="t-law" aria-controls="p-law" aria-selected="false" data-tab="law">Przepisy i terminy</button>
+  </nav>
+
+  <section class="panel" id="p-ready" role="tabpanel" aria-labelledby="t-ready">
+    <div class="grid">
+      <div class="card">
+        <h2>Twój lokal</h2>
+        <p class="hint">Dane startowe to przykład. Zmień je na swoje, a lista obok przeliczy się od razu. Dane zostają w Twojej przeglądarce.</p>
+        <div class="fields">
+          <div class="field"><label for="type">Rodzaj obiektu</label><select id="type" data-k="type"><option value="flat">Mieszkanie w budynku wielolokalowym</option><option value="house">Dom jednorodzinny</option></select></div>
+          <div class="field"><label for="beds">Liczba miejsc noclegowych</label><input id="beds" data-k="beds" type="number" min="0" inputmode="numeric"></div>
+          <div class="field"><label for="rooms">Liczba pokoi</label><input id="rooms" data-k="rooms" type="number" min="0" inputmode="numeric"></div>
+          <div class="field"><label for="coop">Budynek należy do</label><select id="coop" data-k="coop"><option value="none">Brak wspólnoty (dom)</option><option value="wspolnota">Wspólnoty mieszkaniowej</option><option value="spoldzielnia">Spółdzielni mieszkaniowej</option></select></div>
+          <div class="field"><label for="registered">Zgłoszony do gminnej ewidencji</label><select id="registered" data-k="registered"><option value="no">Nie / nie wiem</option><option value="yes">Tak</option></select></div>
+          <div class="field"><label for="basicSafety">Spełnia wymagania wyposażenia, sanitarne i ppoż.</label><select id="basicSafety" data-k="basicSafety"><option value="no">Nie / nie wiem</option><option value="yes">Tak</option></select></div>
+          <div class="field"><label for="smoke">Autonomiczna czujka dymu</label><select id="smoke" data-k="smoke"><option value="no">Nie</option><option value="yes">Tak</option></select></div>
+          <div class="field"><label for="extinguisher">Gaśnica w lokalu</label><select id="extinguisher" data-k="extinguisher"><option value="no">Nie</option><option value="yes">Tak</option></select></div>
+          <div class="field"><label for="fireOpinion">Opinia dot. ochrony ppoż.</label><select id="fireOpinion" data-k="fireOpinion"><option value="no">Nie mam</option><option value="yes">Mam</option></select></div>
+          <div class="field"><label for="hasRegulamin">Regulamin obiektu</label><select id="hasRegulamin" data-k="hasRegulamin"><option value="no">Nie mam</option><option value="yes">Mam</option></select></div>
+          <div class="field"><label for="quietFrom">Cisza nocna od</label><input id="quietFrom" data-k="quietFrom" type="time"></div>
+          <div class="field"><label for="quietTo">Cisza nocna do</label><input id="quietTo" data-k="quietTo" type="time"></div>
+          <div class="field"><label for="complaints">Skargi i zakłócenia w ostatnich 6 mies.</label><input id="complaints" data-k="complaints" type="number" min="0" inputmode="numeric"></div>
+          <div class="field"><label for="platforms">Oferty na Airbnb, Booking itp.</label><select id="platforms" data-k="platforms"><option value="yes">Tak</option><option value="no">Nie</option></select></div>
+        </div>
+        <p class="note">Wymagania oznaczone „Projekt ustawy” mogą się zmienić w Senacie lub po podpisie prezydenta. To narzędzie nie jest poradą prawną.</p>
+      </div>
+      <div class="card" id="readyOut" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-reg" role="tabpanel" aria-labelledby="t-reg" hidden>
+    <div class="grid">
+      <div class="card">
+        <h2>Dane do regulaminu</h2>
+        <div class="fields">
+          <div class="field wide"><label for="name">Nazwa obiektu</label><input id="name" data-k="name"></div>
+          <div class="field wide"><label for="address">Adres</label><input id="address" data-k="address"></div>
+          <div class="field wide"><label for="idNumber">Numer ID z Centralnego Wykazu</label><input id="idNumber" data-k="idNumber" placeholder="Zostaw puste, jeśli jeszcze nie masz"></div>
+          <div class="field"><label for="checkIn">Początek doby hotelowej</label><input id="checkIn" data-k="checkIn" type="time"></div>
+          <div class="field"><label for="checkOut">Koniec doby hotelowej</label><input id="checkOut" data-k="checkOut" type="time"></div>
+          <div class="field"><label for="maxGuests">Maks. liczba gości</label><input id="maxGuests" data-k="maxGuests" type="number" min="1" inputmode="numeric"></div>
+          <div class="field"><label for="smoking">Palenie</label><select id="smoking" data-k="smoking"><option value="no">Zabronione we wnętrzu</option><option value="allowed">Dozwolone na balkonie</option></select></div>
+          <div class="field"><label for="pets">Zwierzęta</label><select id="pets" data-k="pets"><option value="no">Niedozwolone</option><option value="allowed">Po uzgodnieniu</option></select></div>
+          <div class="field"><label for="parties">Imprezy</label><select id="parties" data-k="parties"><option value="no">Zabronione</option><option value="allowed">Poza ciszą nocną</option></select></div>
+          <div class="field wide"><label for="extinguisherPlace">Gdzie jest gaśnica</label><input id="extinguisherPlace" data-k="extinguisherPlace"></div>
+          <div class="field wide"><label for="evacuationPlace">Gdzie jest instrukcja ewakuacji</label><input id="evacuationPlace" data-k="evacuationPlace"></div>
+          <div class="field"><label for="contactName">Osoba kontaktowa</label><input id="contactName" data-k="contactName"></div>
+          <div class="field"><label for="contactPhone">Telefon</label><input id="contactPhone" data-k="contactPhone" inputmode="tel"></div>
+        </div>
+        <p class="hint">Godziny ciszy nocnej bierzemy z zakładki Gotowość.</p>
+      </div>
+      <div class="card" id="regOut"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-tax" role="tabpanel" aria-labelledby="t-tax" hidden>
+    <div class="grid">
+      <div class="card">
+        <h2>Ile zostaje z najmu</h2>
+        <div class="fields">
+          <div class="field"><label for="adr">Średnia cena za dobę (zł)</label><input id="adr" data-k="adr" type="number" min="0" inputmode="decimal"></div>
+          <div class="field"><label for="nights">Wynajęte doby w roku</label><input id="nights" data-k="nights" type="number" min="0" max="365" inputmode="numeric"></div>
+          <div class="field"><label for="commissionPct">Prowizja platform (%)</label><input id="commissionPct" data-k="commissionPct" type="number" min="0" max="100" inputmode="decimal"></div>
+          <div class="field"><label for="fixedMonthly">Stałe koszty miesięcznie (zł)</label><input id="fixedMonthly" data-k="fixedMonthly" type="number" min="0" inputmode="decimal"></div>
+        </div>
+        <p class="note">Szacunek zakłada ryczałt jak od najmu prywatnego (8,5% do 100 tys. zł i 12,5% od nadwyżki), liczony od całego przychodu. Jeśli Twój najem krótkoterminowy jest działalnością gospodarczą, zasady mogą być inne. Potwierdź je z księgową.</p>
+      </div>
+      <div class="card" id="taxOut" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-law" role="tabpanel" aria-labelledby="t-law" hidden>
+    <div class="grid">
+      <div class="card"><h2>Terminy z projektu</h2><ul class="timeline" id="timeline"></ul></div>
+      <div class="card">
+        <h2>Co wiemy, a co nie</h2>
+        <dl class="kv" id="lawFacts"></dl>
+        <p class="note">Liczby pochodzą z opracowań prasowych i prawniczych o projekcie ustawy. Przed złożeniem dokumentów sprawdź je w urzędzie gminy.</p>
+        <h3>Źródła</h3>
+        <ul class="sources" id="sources"></ul>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+/* Konfiguracja sprzedaży. Tu NIE wpisuje się żadnych haseł ani kluczy API.
+ * buyUrl: link płatności z Twojego dostawcy (np. Stripe Payment Link, Przelewy24, Tpay, Buy Me a Coffee). Dopóki pusty, przycisk zakupu jest nieaktywny.
+ * codeHashes: skróty SHA-256 ważnych kodów dostępu. Generuje je tools/gen-codes.js; same kody trafiają do pliku codes-PRYWATNE.txt.
+ * Uwaga: to blokada po stronie przeglądarki. Zniechęca zwykłego użytkownika, ale osoba z wiedzą technizną może ją obejść. */
+var CONFIG = {
+  price: '49 zł',            // HIPOTEZA ceny, do przetestowania
+  priceNote: 'jednorazowo, dostęp na 12 miesięcy od zakupu (aktualizacje przepisów)',
+  buyUrl: '',
+  contact: '',                // np. adres e-mail do wysyłki kodu i pomocy
+  codeHashes: []
+};
+
+/* Dane prawne używane przez Najem Gotowy.
+ * Stan na 2026-10-11. Zmieniaj TYLKO tutaj, gdy zmienią się przepisy.
+ * Pole "verified" mówi, czy wartość potwierdzono w źródle urzędowym czy tylko w opracowaniach.
+ */
+var LAW = {
+  asOf: '2026-10-11',
+  euRegulation: { name: 'Rozporządzenie UE 2024/1028', appliesFrom: '2026-05-20' },
+  bill: {
+    status: 'projekt',
+    summary: 'Ustawa o najmie krótkoterminowym została uchwalona przez Sejm w październiku 2026 r. Czeka na Senat i podpis prezydenta, więc nie jest jeszcze prawem.',
+    druki: '2865 / 3119'
+  },
+  milestones: [
+    { date: '2026-12-31', label: 'Gminy przekazują dane do Centralnego Wykazu; działające obiekty składają projekt regulaminu', basis: 'projekt', verified: false },
+    { date: '2027-01-15', label: 'Dostosowanie dotychczasowych wpisów do nowych zasad', basis: 'projekt', verified: false },
+    { date: '2028-01-01', label: 'Wspólnoty, spółdzielnie i gminy mogą wprowadzać zakazy najmu krótkoterminowego', basis: 'projekt', verified: true }
+  ],
+  limits: {
+    multiUnit: { maxUnitsInBuilding: 6, maxBeds: 30 },
+    house: { maxBeds: 15, maxRooms: 6 },
+    quiet: { minHours: 8, windowFrom: '20:00', windowTo: '08:00' }
+  },
+  fees: { entry: 40, change: 40 },
+  maxFine: 50000,
+  strikes: { count: 3, months: 6, reinstateAfterMonths: 12 },
+  hotelStayUnderDays: 30,
+  vatExemption: 240000,
+  ryczalt: { low: 0.085, high: 0.125, threshold: 100000 },
+  sources: [
+    { title: 'Super Biznes: Sejm uchwalił ustawę o najmie krótkoterminowym', url: 'https://superbiz.se.pl/wiadomosci/najem-bedzie-uregulowany-czy-skutecznie-aa-izE6-ekfG-qXJW.html' },
+    { title: 'Housine: Najem krótkoterminowy 2026, przepisy i rejestracja', url: 'https://housine.pl/blog/najem-krotkoterminowy-przepisy-rejestracja-2026' },
+    { title: 'WNP: Nowe przepisy dla wynajmujących mieszkania', url: 'https://www.wnp.pl/budownictwo/nowe-przepisy-dla-wynajmujacych-mieszkania-mozliwe-wysokie-kary,1048293.html' },
+    { title: 'Bezprawnik: Wynajem mieszkania nie będzie już taki prosty', url: 'https://bezprawnik.pl/wynajem-mieszkania-nie-bedzie-juz-taki-prosty-wlasciciele-i-platformy-z-nowymi-obowiazkami/' }
+  ]
+};
+
+/* Logika Najem Gotowy: czyste funkcje, bez DOM. Używane w przeglądarce i w testach. */
+
+function num(v) { var n = parseFloat(String(v === undefined || v === null ? '' : v).replace(',', '.')); return isFinite(n) && n > 0 ? n : 0; }
+function r2(x) { return Math.round(x * 100) / 100; }
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+function toMin(t) {
+  var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || '').trim());
+  if (!m) return NaN;
+  var h = +m[1], mi = +m[2];
+  if (h > 23 || mi > 59) return NaN;
+  return h * 60 + mi;
+}
+
+/* Cisza nocna wg projektu: min. 8 h, całość w przedziale 20:00-08:00. */
+function validateQuietHours(from, to) {
+  var s = toMin(from), e = toMin(to);
+  if (isNaN(s) || isNaN(e)) return { ok: false, hours: 0, reason: 'Podaj godziny w formacie GG:MM.' };
+  var d = (e - s + 1440) % 1440; if (d === 0) d = 1440;
+  var q = LAW.limits.quiet;
+  var winStart = toMin(q.windowFrom);
+  var winLen = (toMin(q.windowTo) - winStart + 1440) % 1440;
+  var so = (s - winStart + 1440) % 1440;
+  var hours = Math.round(d / 60 * 10) / 10;
+  var windowMsg = 'Cisza nocna powinna mieścić się w przedziale ' + q.windowFrom + '–' + q.windowTo + '.';
+  if (so >= winLen || so + d > winLen) return { ok: false, hours: hours, reason: windowMsg };
+  if (d < q.minHours * 60) return { ok: false, hours: hours, reason: 'Cisza nocna ma trwać co najmniej ' + q.minHours + ' godzin (teraz ' + hours + ' h).' };
+  return { ok: true, hours: hours, reason: '' };
+}
+
+function checkCapacity(a) {
+  var beds = num(a.beds), rooms = num(a.rooms), L = LAW.limits;
+  if (a.type === 'house') {
+    if (beds > L.house.maxBeds || (rooms && rooms > L.house.maxRooms)) {
+      return { ok: false, msg: 'Projekt ogranicza dom jednorodzinny do ' + L.house.maxBeds + ' miejsc w ' + L.house.maxRooms + ' pokojach.' };
+    }
+  } else if (beds > L.multiUnit.maxBeds) {
+    return { ok: false, msg: 'Projekt ogranicza budynek wielolokalowy do ' + L.multiUnit.maxBeds + ' miejsc noclegowych łącznie.' };
+  }
+  return { ok: true, msg: '' };
+}
+
+function daysBetween(fromStr, toStr) {
+  var a = Date.parse(fromStr + 'T00:00:00Z'), b = Date.parse(toStr + 'T00:00:00Z');
+  return Math.round((b - a) / 86400000);
+}
+
+function taxEstimate(p) {
+  var adr = num(p.adr), nights = Math.min(num(p.nights), 365), comm = Math.min(num(p.commissionPct), 100), fixed = num(p.fixedMonthly);
+  var R = LAW.ryczalt;
+  var revenue = r2(adr * nights);
+  var commission = r2(revenue * comm / 100);
+  var tax = r2(Math.min(revenue, R.threshold) * R.low + Math.max(0, revenue - R.threshold) * R.high);
+  var fixedYear = r2(fixed * 12);
+  var net = r2(revenue - commission - tax - fixedYear);
+  var perNight = adr * (1 - comm / 100 - R.low);
+  var breakEven = perNight > 0 && fixedYear > 0 ? Math.ceil(fixedYear / perNight) : (fixedYear === 0 ? 0 : null);
+  return {
+    revenue: revenue, commission: commission, tax: tax, fixedYear: fixedYear, net: net,
+    vatPct: Math.round(revenue / LAW.vatExemption * 1000) / 10,
+    vatExceeded: revenue > LAW.vatExemption,
+    breakEvenNights: breakEven
+  };
+}
+
+/* Lista zadań. basis: 'dzis' (obowiązuje), 'projekt' (projekt ustawy), 'rynek' (rada praktyczna). */
+function buildChecklist(a, today) {
+  var yes = function (v) { return v === 'yes'; };
+  var quiet = validateQuietHours(a.quietFrom, a.quietTo);
+  var cap = checkCapacity(a);
+  var complaints = num(a.complaints);
+  var tasks = [];
+
+  tasks.push({
+    id: 'ewidencja', basis: 'dzis', priority: 'wysoki', done: yes(a.registered),
+    title: 'Zgłoś obiekt do gminnej ewidencji obiektów',
+    why: 'Usługi w obiekcie niezgłoszonym do ewidencji to wykroczenie (ograniczenie wolności albo grzywna). Zgłoszenie składa się u wójta, burmistrza lub prezydenta miasta właściwego dla lokalu.'
+  });
+  tasks.push({
+    id: 'wymagania', basis: 'dzis', priority: 'wysoki', done: yes(a.basicSafety),
+    title: 'Spełnij wymagania wyposażenia, sanitarne i przeciwpożarowe',
+    why: 'Obiekt musi spełniać minimalne wymagania wyposażenia oraz wymagania sanitarne i przeciwpożarowe, zanim zacznie przyjmować gości.'
+  });
+  tasks.push({
+    id: 'czujki', basis: 'projekt', priority: 'średni', done: yes(a.smoke) && yes(a.extinguisher),
+    title: 'Zamontuj autonomiczną czujkę dymu i gaśnicę',
+    why: 'Projekt wymaga ich w działających obiektach (okres przejściowy). To tani zakup, a poprawia też bezpieczeństwo gości.'
+  });
+  tasks.push({
+    id: 'regulamin', basis: 'projekt', priority: 'wysoki', done: yes(a.hasRegulamin) && quiet.ok,
+    title: 'Przygotuj regulamin obiektu zgodny z projektem',
+    why: 'Regulamin ma zawierać dobę hotelową, ciszę nocną (min. ' + LAW.limits.quiet.minHours + ' h w przedziale ' + LAW.limits.quiet.windowFrom + '–' + LAW.limits.quiet.windowTo + '), numer ID i kontakt do osoby odpowiedzialnej. ' + (quiet.ok ? '' : quiet.reason)
+  });
+  tasks.push({
+    id: 'opinia', basis: 'projekt', priority: 'średni', done: yes(a.fireOpinion),
+    title: 'Zdobądź opinię dotyczącą ochrony przeciwpożarowej',
+    why: 'Projekt wymienia opinię ppoż. wśród dokumentów składanych przy zgłoszeniu. Opłata skarbowa za wpis to ' + LAW.fees.entry + ' zł, za zmianę wpisu ' + LAW.fees.change + ' zł.'
+  });
+  if (!cap.ok) {
+    tasks.push({ id: 'limit', basis: 'projekt', priority: 'wysoki', done: false, title: 'Dostosuj liczbę miejsc noclegowych', why: cap.msg });
+  }
+  if (yes(a.platforms)) {
+    tasks.push({
+      id: 'numer-id', basis: 'projekt', priority: 'niski', done: false,
+      title: 'Wpisz numer ID do wszystkich ofert na platformach',
+      why: 'Po wejściu ustawy w życie numer z Centralnego Wykazu będzie trzeba podać w każdej ofercie. Brak numeru grozi karą do ' + LAW.maxFine.toLocaleString('pl-PL') + ' zł. Od 20.05.2026 platformy i tak przekazują organom dane o ofertach (rozporządzenie UE 2024/1028).'
+    });
+  }
+  tasks.push({
+    id: 'skargi', basis: 'projekt', priority: complaints >= 2 ? 'wysoki' : 'niski', done: complaints === 0,
+    title: 'Ogranicz skargi sąsiadów i zakłócenia porządku',
+    why: 'Trzy naruszenia bezpieczeństwa lub porządku w ciągu ' + LAW.strikes.months + ' miesięcy oznaczają wykreślenie z ewidencji, a powrót możliwy jest dopiero po roku. Masz teraz: ' + complaints + '.'
+  });
+  if (a.coop === 'wspolnota' || a.coop === 'spoldzielnia') {
+    tasks.push({
+      id: 'plan-b', basis: 'projekt', priority: 'średni', done: false,
+      title: 'Przygotuj plan B na zakaz uchwalony przez wspólnotę lub spółdzielnię',
+      why: 'Od 01.01.2028 właściciele (wspólnota) albo walne zgromadzenie (spółdzielnia, ponad 50% uprawnionych) mogą zakazać najmu krótkoterminowego. Po uchwale masz 6 miesięcy. Według projektu usługą hotelarską jest wynajem krótszy niż ' + LAW.hotelStayUnderDays + ' dni, więc najem średnioterminowy to możliwy plan B (do sprawdzenia z prawnikiem).'
+    });
+  }
+  var doneNow = 0, totalNow = 0, doneDraft = 0, totalDraft = 0;
+  tasks.forEach(function (t) {
+    if (t.basis === 'dzis') { totalNow++; if (t.done) doneNow++; } else { totalDraft++; if (t.done) doneDraft++; }
+  });
+  var total = totalNow + totalDraft, done = doneNow + doneDraft;
+  var order = { 'wysoki': 0, 'średni': 1, 'niski': 2 };
+  var open = tasks.filter(function (t) { return !t.done; }).sort(function (x, y) { return order[x.priority] - order[y.priority]; });
+  var finished = tasks.filter(function (t) { return t.done; });
+  return {
+    tasks: open.concat(finished),
+    doneNow: doneNow, totalNow: totalNow, doneDraft: doneDraft, totalDraft: totalDraft,
+    percent: total ? Math.round(done / total * 100) : 0,
+    capacity: cap, quiet: quiet,
+    nextMilestone: LAW.milestones.map(function (m) { return { date: m.date, label: m.label, days: daysBetween(today, m.date) }; })
+      .filter(function (m) { return m.days >= 0; })[0] || null
+  };
+}
+
+function buildRegulamin(d) {
+  var q = validateQuietHours(d.quietFrom, d.quietTo);
+  var id = (d.idNumber || '').trim() || '[numer ID zostanie nadany po wpisie do Centralnego Wykazu]';
+  var sec = [];
+  sec.push({ h: 'Obiekt', p: (d.name || '[nazwa obiektu]') + ', ' + (d.address || '[adres]') + '. Numer identyfikacyjny obiektu: ' + id + '.' });
+  sec.push({ h: 'Doba hotelowa', p: 'Doba hotelowa rozpoczyna się o godzinie ' + (d.checkIn || '15:00') + ' i kończy o godzinie ' + (d.checkOut || '11:00') + '.' });
+  sec.push({ h: 'Cisza nocna', p: 'Cisza nocna obowiązuje od ' + (d.quietFrom || '22:00') + ' do ' + (d.quietTo || '06:00') + '. W tym czasie nie wolno zakłócać spokoju innym mieszkańcom budynku.' });
+  sec.push({ h: 'Liczba gości', p: 'W obiekcie mogą przebywać maksymalnie ' + (num(d.maxGuests) || '[liczba]') + ' osoby/osób. Przyjmowanie dodatkowych gości wymaga zgody gospodarza.' });
+  sec.push({ h: 'Zasady pobytu', p: 'Palenie tytoniu: ' + (d.smoking === 'allowed' ? 'dozwolone wyłącznie na balkonie lub tarasie' : 'zabronione we wnętrzu obiektu') + '. Zwierzęta: ' + (d.pets === 'allowed' ? 'dozwolone po wcześniejszym uzgodnieniu z gospodarzem' : 'niedozwolone') + '. Imprezy i spotkania towarzyskie: ' + (d.parties === 'allowed' ? 'dozwolone w godzinach poza ciszą nocną' : 'zabronione') + '.' });
+  sec.push({ h: 'Bezpieczeństwo', p: 'Numer alarmowy: 112. Gaśnica znajduje się: ' + (d.extinguisherPlace || '[miejsce]') + '. Instrukcja postępowania na wypadek pożaru i droga ewakuacji: ' + (d.evacuationPlace || '[miejsce]') + '. Czujka dymu jest zamontowana w obiekcie; nie wolno jej wyłączać ani zasłaniać.' });
+  sec.push({ h: 'Szkody', p: 'Gość odpowiada za szkody wyrządzone w obiekcie zgodnie z obowiązującymi przepisami prawa. O każdej szkodzie należy niezwłocznie poinformować osobę kontaktową.' });
+  sec.push({ h: 'Osoba kontaktowa', p: (d.contactName || '[imię i nazwisko]') + ', telefon ' + (d.contactPhone || '[numer]') + '. Dostępna w sprawach awarii, skarg i bezpieczeństwa.' });
+  return { sections: sec, quiet: q };
+}
+
+function regulaminToText(r) {
+  return 'REGULAMIN OBIEKTU\n\n' + r.sections.map(function (s) { return s.h.toUpperCase() + '\n' + s.p; }).join('\n\n') +
+    '\n\nWzór przygotowany w narzędziu Najem Gotowy według projektu ustawy (stan na ' + LAW.asOf + '). Nie jest poradą prawną. Przed złożeniem w gminie sprawdź go z aktualnym brzmieniem przepisów.';
+}
+
+
+/* Interfejs Najem Gotowy. Zależy od LAW (law.js) i funkcji z logic.js. */
+var CAN_PRINT = true;
+var STORE_KEY = 'najem-gotowy-v1';
+var EXAMPLE = {
+  type: 'flat', beds: 4, rooms: 2, coop: 'wspolnota', registered: 'no', basicSafety: 'no', smoke: 'yes', extinguisher: 'no',
+  fireOpinion: 'no', hasRegulamin: 'no', quietFrom: '22:00', quietTo: '06:00', complaints: 1, platforms: 'yes',
+  name: 'Apartament Przykładowy', address: 'ul. Przykładowa 1/2, 00-001 Warszawa', idNumber: '', checkIn: '15:00', checkOut: '11:00',
+  maxGuests: 4, smoking: 'no', pets: 'no', parties: 'no', extinguisherPlace: 'w przedpokoju, przy drzwiach wejściowych',
+  evacuationPlace: 'na drzwiach wejściowych od wewnątrz', contactName: 'Anna Nowak', contactPhone: '600 100 200',
+  adr: 320, nights: 190, commissionPct: 15, fixedMonthly: 1400
+};
+var state = Object.assign({}, EXAMPLE);
+try { var saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (saved && typeof saved === 'object') state = Object.assign(state, saved); } catch (e) {}
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function pln(n) { return n.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' zł'; }
+function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function plDate(s) { var p = s.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+var LIC_KEY = 'najem-gotowy-lic';
+var licensed = false;
+var FREE_TASKS = 3, FREE_SECTIONS = 2;
+function sha256hex(str) {
+  if (!(window.crypto && crypto.subtle)) return Promise.reject(new Error('no-subtle'));
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function (b) {
+    return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+  });
+}
+function checkCode(code) {
+  var c = String(code || '').trim().toUpperCase();
+  return sha256hex(c).then(function (h) { return CONFIG.codeHashes.indexOf(h) !== -1 ? c : null; });
+}
+function lockBox(what) {
+  var buy = CONFIG.buyUrl ? '<a class="btn" href="' + esc(CONFIG.buyUrl) + '" target="_blank" rel="noopener noreferrer">Kup dostęp za ' + esc(CONFIG.price) + '</a>'
+    : '<button class="btn off" type="button" disabled>Kup dostęp za ' + esc(CONFIG.price) + ' (płatność jeszcze nie skonfigurowana)</button>';
+  return '<div class="lock"><h3>Reszta w wersji pełnej</h3><p>' + esc(what) + '</p>' + buy + '</div>';
+}
+function renderLic() {
+  var el = $('licBar');
+  if (licensed) { el.innerHTML = '<div class="lic"><div><b>Dostęp pełny aktywny.</b> Dziękujemy.</div><button class="btn alt" type="button" id="licOut">Wyloguj kod</button></div>'; $('licOut').onclick = function () { try { localStorage.removeItem(LIC_KEY); } catch (e) {} licensed = false; renderLic(); renderAll(); }; return; }
+  el.innerHTML = '<div class="lic"><div><b>Wersja bezpłatna:</b> ' + FREE_TASKS + ' pierwsze zadania, podgląd regulaminu i kalkulator. <b>Pełny dostęp: ' + esc(CONFIG.price) + '</b>, ' + esc(CONFIG.priceNote) + '.</div>' +
+    '<form id="licForm"><input id="licCode" type="text" placeholder="Kod dostępu NG-XXXX-XXXX-XXXX" autocomplete="off" aria-label="Kod dostępu"><button class="btn" type="submit">Aktywuj</button></form><span class="hint" id="licMsg" role="status"></span></div>';
+  $('licForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    checkCode($('licCode').value).then(function (ok) {
+      if (!ok) { $('licMsg').textContent = 'Nieprawidłowy kod.'; return; }
+      licensed = true; try { localStorage.setItem(LIC_KEY, ok); } catch (x) {} renderLic(); renderAll();
+    }, function () { $('licMsg').textContent = 'Ta przeglądarka nie pozwala sprawdzić kodu (potrzebne bezpieczne połączenie https).'; });
+  });
+}
+
+var BASIS = { dzis: 'Obowiązuje dziś', projekt: 'Projekt ustawy' };
+
+function renderReady() {
+  var r = buildChecklist(state, todayStr());
+  var html = '<div class="meter"><div class="meter-row"><div><div class="big">' + r.percent + '%</div><span class="hint">gotowości na nowe zasady</span></div>' +
+    '<div class="pair"><span>Obowiązuje dziś: <b>' + r.doneNow + ' z ' + r.totalNow + '</b></span><span>Projekt ustawy: <b>' + r.doneDraft + ' z ' + r.totalDraft + '</b></span></div></div>' +
+    '<div class="bar" role="progressbar" aria-valuenow="' + r.percent + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + r.percent + '%"></i></div></div>';
+  if (r.doneNow < r.totalNow) {
+    html += '<div class="callout bad">Wymagania, które obowiązują już teraz, nie są jeszcze spełnione. Zacznij od nich, bo grozi za to wykroczenie, a nie dopiero przyszła kara.</div>';
+  }
+  if (r.nextMilestone) {
+    html += '<div class="callout warn">Najbliższy termin z projektu: <b>' + plDate(r.nextMilestone.date) + '</b> (za ' + r.nextMilestone.days + ' dni). ' + esc(r.nextMilestone.label) + '.</div>';
+  }
+  var shown = licensed ? r.tasks : r.tasks.slice(0, FREE_TASKS);
+  html += '<ul class="tasks">' + shown.map(function (t) {
+    return '<li class="task ' + (t.done ? 'done' : (t.priority === 'wysoki' ? 'high' : '')) + '"><header><span class="tag ' + t.basis + '">' + BASIS[t.basis] + '</span>' +
+      (t.done ? '<span class="tag ok">Zrobione</span>' : '<span class="tag prio-' + t.priority + '">Priorytet: ' + t.priority + '</span>') +
+      '</header><h3>' + esc(t.title) + '</h3><p>' + esc(t.why) + '</p></li>';
+  }).join('') + '</ul>';
+  if (!licensed && r.tasks.length > FREE_TASKS) html += lockBox('Pokazujemy ' + FREE_TASKS + ' z ' + r.tasks.length + ' zadań. Pełna lista zawiera wszystkie wymagania z wyjaśnieniem, co z nich wynika dla Twojego lokalu.');
+  $('readyOut').innerHTML = html;
+}
+
+function renderReg() {
+  var r = buildRegulamin(state);
+  var html = '';
+  if (!r.quiet.ok) html += '<div class="callout bad">' + esc(r.quiet.reason) + ' Popraw godziny w zakładce Gotowość.</div>';
+  else html += '<div class="callout ok">Cisza nocna ' + esc(state.quietFrom) + '–' + esc(state.quietTo) + ' (' + r.quiet.hours + ' h) mieści się w wymaganiach projektu.</div>';
+  if (licensed) html += '<div class="actions no-print"><button class="btn" type="button" id="copyReg">Kopiuj tekst</button>' +
+    (CAN_PRINT ? '<button class="btn alt" type="button" id="printReg">Drukuj lub zapisz jako PDF</button>' : '') + '<span class="hint" id="copyMsg" role="status"></span></div>';
+  html += '<article class="doc"><h2>REGULAMIN OBIEKTU</h2>' + (licensed ? r.sections : r.sections.slice(0, FREE_SECTIONS)).map(function (s) { return '<div><h3>' + esc(s.h) + '</h3><p>' + esc(s.p) + '</p></div>'; }).join('') +
+    '<p class="foot">Wzór przygotowany w narzędziu Najem Gotowy według projektu ustawy (stan na ' + plDate(LAW.asOf) + '). Nie jest poradą prawną.</p></article>';
+  if (!licensed) html += lockBox('Podgląd pokazuje ' + FREE_SECTIONS + ' z ' + r.sections.length + ' części regulaminu. Pełny tekst z kopiowaniem i drukiem do PDF jest w wersji pełnej.');
+  $('regOut').innerHTML = html;
+  if (licensed) $('copyReg').onclick = function () { copyText(regulaminToText(r), $('copyMsg')); };
+  if (licensed && CAN_PRINT) $('printReg').onclick = function () { printPanel('p-reg'); };
+}
+
+function renderTax() {
+  var t = taxEstimate(state);
+  var html = '<div class="stats">' +
+    '<div class="stat"><span>Przychód rocznie</span><b>' + pln(t.revenue) + '</b></div>' +
+    '<div class="stat"><span>Prowizje platform</span><b>' + pln(t.commission) + '</b></div>' +
+    '<div class="stat"><span>Ryczałt (szacunek)</span><b>' + pln(t.tax) + '</b></div>' +
+    '<div class="stat"><span>Koszty stałe rocznie</span><b>' + pln(t.fixedYear) + '</b></div>' +
+    '<div class="stat ' + (t.net >= 0 ? 'good' : 'bad') + '"><span>Zostaje po wszystkim</span><b>' + pln(t.net) + '</b></div>' +
+    '<div class="stat"><span>Próg rentowności</span><b>' + (t.breakEvenNights === null ? 'brak' : t.breakEvenNights + ' dób') + '</b></div></div>';
+  html += '<div class="meter"><div class="meter-row"><span>Limit zwolnienia z VAT (' + pln(LAW.vatExemption) + ')</span><b>' + t.vatPct + '%</b></div>' +
+    '<div class="bar"><i style="width:' + Math.min(100, t.vatPct) + '%"></i></div></div>';
+  if (t.vatExceeded) html += '<div class="callout bad">Przychód przekracza limit zwolnienia z VAT. Zwolnienie traci moc od czynności, którą przekroczono limit, a usługi noclegowe mają stawkę 8%. Skonsultuj się z księgową.</div>';
+  else if (t.vatPct >= 80) html += '<div class="callout warn">Zbliżasz się do limitu zwolnienia z VAT. Pilnuj przychodu w ciągu roku.</div>';
+  $('taxOut').innerHTML = html;
+}
+
+function renderLaw() {
+  $('asOf').textContent = plDate(LAW.asOf);
+  $('billStatus').textContent = LAW.bill.summary;
+  var today = todayStr();
+  $('timeline').innerHTML = LAW.milestones.map(function (m) {
+    var d = daysBetween(today, m.date);
+    return '<li><time datetime="' + m.date + '">' + plDate(m.date) + '</time><div>' + esc(m.label) + '<small>' + (d >= 0 ? 'za ' + d + ' dni' : 'termin minął') + ' · ' + (m.verified ? 'potwierdzone w kilku źródłach' : 'wg jednego opracowania, do weryfikacji') + '</small></div></li>';
+  }).join('');
+  var f = [
+    ['Rozporządzenie UE 2024/1028', 'od ' + plDate(LAW.euRegulation.appliesFrom)],
+    ['Kara za brak numeru ID lub wpisu (projekt)', 'do ' + pln(LAW.maxFine)],
+    ['Wykreślenie z ewidencji (projekt)', LAW.strikes.count + ' naruszenia / ' + LAW.strikes.months + ' mies.'],
+    ['Powrót po wykreśleniu', 'po ' + LAW.strikes.reinstateAfterMonths + ' mies.'],
+    ['Opłata skarbowa za wpis / zmianę', LAW.fees.entry + ' zł / ' + LAW.fees.change + ' zł'],
+    ['Usługa hotelarska to najem krótszy niż', LAW.hotelStayUnderDays + ' dni']
+  ];
+  $('lawFacts').innerHTML = f.map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('');
+  $('sources').innerHTML = LAW.sources.map(function (s) { return '<li><a href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + esc(s.title) + '</a></li>'; }).join('');
+}
+
+function copyText(text, msgEl) {
+  function fallback() {
+    var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta); msgEl.textContent = ok ? 'Skopiowano.' : 'Nie udało się skopiować. Zaznacz tekst ręcznie.';
+  }
+  try { navigator.clipboard.writeText(text).then(function () { msgEl.textContent = 'Skopiowano.'; }, fallback); } catch (e) { fallback(); }
+}
+
+function printPanel(id) {
+  var p = $(id); p.classList.add('print-active');
+  try { window.print(); } finally { p.classList.remove('print-active'); }
+}
+
+function showTab(name) {
+  ['ready', 'reg', 'tax', 'law'].forEach(function (n) {
+    $('p-' + n).hidden = n !== name;
+    $('t-' + n).setAttribute('aria-selected', n === name ? 'true' : 'false');
+  });
+}
+
+function fillForm() {
+  document.querySelectorAll('[data-k]').forEach(function (el) { var v = state[el.getAttribute('data-k')]; if (v !== undefined) el.value = v; });
+}
+
+function renderAll() { renderReady(); renderReg(); renderTax(); }
+
+document.addEventListener('input', function (e) {
+  var k = e.target.getAttribute && e.target.getAttribute('data-k');
+  if (!k) return;
+  state[k] = e.target.value; save(); renderAll();
+});
+document.addEventListener('change', function (e) {
+  var k = e.target.getAttribute && e.target.getAttribute('data-k');
+  if (!k) return;
+  state[k] = e.target.value; save(); renderAll();
+});
+document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { showTab(b.getAttribute('data-tab')); }); });
+$('themeBtn').addEventListener('click', function () {
+  var root = document.documentElement;
+  var dark = root.getAttribute('data-theme') === 'dark' || (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+});
+
+fillForm(); renderLaw(); renderLic(); renderAll();
+try {
+  var savedCode = localStorage.getItem(LIC_KEY);
+  if (savedCode) checkCode(savedCode).then(function (ok) { if (ok) { licensed = true; renderLic(); renderAll(); } }, function () {});
+} catch (e) {}
+
+</script>
+
+</body>
+</html>
