@@ -256,6 +256,7 @@ var CONFIG = {
   price: '49 zł',            // HIPOTEZA ceny, do przetestowania
   priceNote: 'jednorazowo, dostęp na 12 miesięcy od zakupu (aktualizacje przepisów)',
   buyUrl: '',
+  workerUrl: 'https://najem-gotowy-pay.ytshortsodeatho.workers.dev',              // adres serwera płatności (Cloudflare Worker), np. https://najem-gotowy-pay.NAZWA.workers.dev; gdy wpisany, zastępuje buyUrl
   contact: '',                // np. adres e-mail do wysyłki kodu i pomocy
   codeHashes: []
 };
@@ -487,10 +488,14 @@ function sha256hex(str) {
 }
 function checkCode(code) {
   var c = String(code || '').trim().toUpperCase();
-  return sha256hex(c).then(function (h) { return CONFIG.codeHashes.indexOf(h) !== -1 ? c : null; });
+  return sha256hex(c).then(function (h) { return CONFIG.codeHashes.indexOf(h) !== -1 ? c : null; }, function () { return null; }).then(function (ok) {
+    if (ok || !CONFIG.workerUrl) return ok;
+    return fetch(CONFIG.workerUrl.replace(/\/$/, '') + '/verify?code=' + encodeURIComponent(c)).then(function (r) { return r.json(); }).then(function (j) { return j && j.ok ? c : null; }, function () { return null; });
+  });
 }
 function lockBox(what) {
-  var buy = CONFIG.buyUrl ? '<a class="btn" href="' + esc(CONFIG.buyUrl) + '" target="_blank" rel="noopener noreferrer">Kup dostęp za ' + esc(CONFIG.price) + '</a>'
+  var buyHref = CONFIG.workerUrl ? CONFIG.workerUrl.replace(/\/$/, '') + '/buy' : CONFIG.buyUrl;
+  var buy = buyHref ? '<a class="btn" href="' + esc(buyHref) + '" rel="noopener noreferrer">Kup dostęp za ' + esc(CONFIG.price) + '</a>'
     : '<button class="btn off" type="button" disabled>Kup dostęp za ' + esc(CONFIG.price) + ' (płatność jeszcze nie skonfigurowana)</button>';
   return '<div class="lock"><h3>Reszta w wersji pełnej</h3><p>' + esc(what) + '</p>' + buy + '</div>';
 }
