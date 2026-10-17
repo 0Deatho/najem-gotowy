@@ -143,6 +143,34 @@ input, select { font: inherit; color: var(--fg); background: var(--bg); border: 
 .lock p { margin: 0 0 10px; }
 .btn[disabled], .btn.off { opacity: 0.55; cursor: not-allowed; }
 
+.offer { display: flex; flex-direction: column; gap: 12px; }
+.offer p { margin: 0; }
+.offer-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.offer-cols > div { background: var(--surface2); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.offer-cols ul, .legal ul, .legal ol { margin: 6px 0 0; padding-left: 1.2rem; }
+.buyblock { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.cons { display: flex; gap: 8px; align-items: flex-start; font-size: 0.88rem; }
+.cons input { margin-top: 3px; flex: none; }
+a.btn { display: inline-block; text-decoration: none; }
+a.btn.off { opacity: 0.55; cursor: not-allowed; }
+.site-foot { border-top: 1px solid var(--line); padding-top: 14px; font-size: 0.85rem; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.site-foot p { margin: 0; }
+.site-foot a, .legal a { color: var(--brand); }
+.legal { max-width: 800px; margin-inline: auto; display: flex; flex-direction: column; gap: 10px; }
+.legal h1 { font-size: 1.7rem; }
+.legal h2 { font-size: 1.05rem; margin-top: 12px; }
+.legal p, .legal li { margin: 0; line-height: 1.6; }
+.legal .meta { color: var(--muted); font-size: 0.85rem; }
+.legal table { width: 100%; border-collapse: collapse; font-size: 0.85rem; display: block; overflow-x: auto; }
+.legal th, .legal td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.legal .missing { background: var(--bad-bg); color: var(--bad); padding: 0 4px; border-radius: 4px; }
+.buyblock { max-width: 100%; }
+.cons span { min-width: 0; overflow-wrap: anywhere; }
+a.btn, .buyblock .btn { white-space: normal; max-width: 100%; text-align: center; }
+.cons { font-weight: 400; color: var(--fg); width: 100%; }
+.cons input.consBox { width: 18px; height: 18px; padding: 0; flex: none; }
+.cons span { flex: 1 1 0; }
+
 </style>
 <div class="wrap">
   <header class="top">
@@ -246,6 +274,22 @@ input, select { font: inherit; color: var(--fg); background: var(--bg); border: 
       </div>
     </div>
   </section>
+
+  <section class="card offer" id="oferta" aria-labelledby="oferta-h">
+    <h2 id="oferta-h">Co kupujesz</h2>
+    <p>Najem Gotowy to narzędzie w przeglądarce dla właścicieli lokali na najem krótkoterminowy w Polsce. Odpowiadasz na pytania o swój lokal, a narzędzie pokazuje, co masz już spełnione, co jest do zrobienia i do kiedy, oraz przygotowuje regulamin dla gości.</p>
+    <div class="offer-cols">
+      <div><h3>Wersja bezpłatna</h3><ul><li>3 pierwsze zadania z listy kontrolnej</li><li>Podgląd 2 części regulaminu obiektu</li><li>Pełny kalkulator opłacalności</li><li>Zestawienie przepisów i terminów</li></ul></div>
+      <div><h3>Pełny dostęp: 49 zł</h3><ul><li>Pełna lista zadań z wyjaśnieniami dla Twojego lokalu</li><li>Pełny regulamin obiektu (8 części) do skopiowania, wydruku lub zapisu do PDF</li><li>Aktualizacje po zmianach przepisów</li><li>Dostęp na 12 miesięcy od zakupu, płatność jednorazowa</li></ul></div>
+    </div>
+    <p class="note"><b>Jak dostajesz dostęp:</b> po zapłacie (Autopay) od razu widzisz swój kod dostępu na stronie podsumowania. Wpisujesz go w polu na górze tej strony. Narzędzie ma charakter informacyjny i nie jest poradą prawną ani podatkową.</p>
+    <div id="buyBox" class="no-print"></div>
+  </section>
+
+  <footer class="site-foot no-print">
+    <p><b>Sprzedawca:</b> Nikodem Michalak, osoba fizyczna prowadząca działalność nierejestrowaną (art. 5 ust. 1 Prawa przedsiębiorców). Kontakt: <a href="mailto:nikodemmichalak2007@gmail.com">nikodemmichalak2007@gmail.com</a>, adres korespondencyjny: Mury, 64-320 Buk.</p>
+    <p><a href="regulamin.html">Regulamin</a> · <a href="polityka-prywatnosci.html">Polityka prywatności</a></p>
+  </footer>
 </div>
 <script>
 /* Konfiguracja sprzedaży. Tu NIE wpisuje się żadnych haseł ani kluczy API.
@@ -493,12 +537,43 @@ function checkCode(code) {
     return fetch(CONFIG.workerUrl.replace(/\/$/, '') + '/verify?code=' + encodeURIComponent(c)).then(function (r) { return r.json(); }).then(function (j) { return j && j.ok ? c : null; }, function () { return null; });
   });
 }
-function lockBox(what) {
+var consent = { a: false, b: false };
+function buyBlock() {
   var buyHref = CONFIG.workerUrl ? CONFIG.workerUrl.replace(/\/$/, '') + '/buy' : CONFIG.buyUrl;
-  var buy = buyHref ? '<a class="btn" href="' + esc(buyHref) + '" rel="noopener noreferrer">Kup dostęp za ' + esc(CONFIG.price) + '</a>'
-    : '<button class="btn off" type="button" disabled>Kup dostęp za ' + esc(CONFIG.price) + ' (płatność jeszcze nie skonfigurowana)</button>';
-  return '<div class="lock"><h3>Reszta w wersji pełnej</h3><p>' + esc(what) + '</p>' + buy + '</div>';
+  var ready = consent.a && consent.b;
+  var chk = function (k, label) { return '<label class="cons"><input type="checkbox" class="consBox" data-c="' + k + '"' + (consent[k] ? ' checked' : '') + '> <span>' + label + '</span></label>'; };
+  return '<div class="buyblock">' +
+    chk('a', 'Zapoznałem(-am) się z <a href="regulamin.html" target="_blank" rel="noopener">Regulaminem</a> i <a href="polityka-prywatnosci.html" target="_blank" rel="noopener">Polityką prywatności</a> i je akceptuję.') +
+    chk('b', 'Chcę, aby Pełny dostęp został udostępniony natychmiast po zapłacie. Wiem, że jako konsument tracę wtedy prawo odstąpienia od umowy w ciągu 14 dni.') +
+    (buyHref ? '<a class="btn buyBtn' + (ready ? '' : ' off') + '" href="' + esc(buyHref) + '" rel="noopener noreferrer">Kupuję i płacę ' + esc(CONFIG.price) + ' (zamówienie z obowiązkiem zapłaty)</a>'
+      : '<button class="btn off" type="button" disabled>Kup dostęp za ' + esc(CONFIG.price) + ' (płatność jeszcze nie skonfigurowana)</button>') +
+    '<span class="hint buyMsg" role="status"></span></div>';
 }
+function lockBox(what) {
+  return '<div class="lock"><h3>Reszta w wersji pełnej</h3><p>' + esc(what) + '</p>' + buyBlock() + '</div>';
+}
+function renderOffer() {
+  var el = $('buyBox');
+  if (el) el.innerHTML = licensed ? '<p><b>Pełny dostęp jest aktywny.</b></p>' : buyBlock();
+}
+document.addEventListener('change', function (e) {
+  var t = e.target;
+  if (!t.classList || !t.classList.contains('consBox')) return;
+  consent[t.getAttribute('data-c')] = t.checked;
+  var boxes = document.querySelectorAll('.consBox');
+  for (var i = 0; i < boxes.length; i++) boxes[i].checked = consent[boxes[i].getAttribute('data-c')];
+  var btns = document.querySelectorAll('.buyBtn');
+  for (var j = 0; j < btns.length; j++) btns[j].classList.toggle('off', !(consent.a && consent.b));
+  var msgs = document.querySelectorAll('.buyMsg');
+  for (var k = 0; k < msgs.length; k++) msgs[k].textContent = '';
+});
+document.addEventListener('click', function (e) {
+  var t = e.target.closest ? e.target.closest('.buyBtn') : null;
+  if (!t || (consent.a && consent.b)) return;
+  e.preventDefault();
+  var msgs = document.querySelectorAll('.buyMsg');
+  for (var k = 0; k < msgs.length; k++) msgs[k].textContent = 'Zaznacz oba oświadczenia, aby przejść do płatności.';
+});
 function renderLic() {
   var el = $('licBar');
   if (licensed) { el.innerHTML = '<div class="lic"><div><b>Dostęp pełny aktywny.</b> Dziękujemy.</div><button class="btn alt" type="button" id="licOut">Wyloguj kod</button></div>'; $('licOut').onclick = function () { try { localStorage.removeItem(LIC_KEY); } catch (e) {} licensed = false; renderLic(); renderAll(); }; return; }
@@ -613,7 +688,7 @@ function fillForm() {
   document.querySelectorAll('[data-k]').forEach(function (el) { var v = state[el.getAttribute('data-k')]; if (v !== undefined) el.value = v; });
 }
 
-function renderAll() { renderReady(); renderReg(); renderTax(); }
+function renderAll() { renderReady(); renderReg(); renderTax(); renderOffer(); }
 
 document.addEventListener('input', function (e) {
   var k = e.target.getAttribute && e.target.getAttribute('data-k');

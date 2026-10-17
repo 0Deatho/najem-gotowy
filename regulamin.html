@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regulamin | Najem Gotowy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Układ: wąski pasek nazwy i statusu prawa, pod nim zakładki; w zakładkach formularz po lewej, wynik po prawej (na telefonie jedna kolumna). */
+:root {
+  --bg: #f2f5f4; --surface: #ffffff; --surface2: #e7eeec; --fg: #14201f; --muted: #4f605e; --line: #cbd7d5;
+  --brand: #0b6e68; --brand-fg: #ffffff; --brand-soft: #d9efec;
+  --warn: #8f4f00; --warn-bg: #fbefd9; --bad: #a32a2a; --bad-bg: #fbe5e3; --ok: #1d6f40; --ok-bg: #dcf1e4;
+  --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1918; --surface: #14231f; --surface2: #1b2d2a; --fg: #e5eeec; --muted: #9db2af; --line: #2a3f3b;
+    --brand: #4fc3b8; --brand-fg: #06201e; --brand-soft: #173a36;
+    --warn: #f0b35a; --warn-bg: #33270f; --bad: #ff9a95; --bad-bg: #3a1a19; --ok: #72d79d; --ok-bg: #12301f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1918; --surface: #14231f; --surface2: #1b2d2a; --fg: #e5eeec; --muted: #9db2af; --line: #2a3f3b;
+  --brand: #4fc3b8; --brand-fg: #06201e; --brand-soft: #173a36;
+  --warn: #f0b35a; --warn-bg: #33270f; --bad: #ff9a95; --bad-bg: #3a1a19; --ok: #72d79d; --ok-bg: #12301f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font-body); padding-inline: 16px; padding-block: 20px 56px; }
+.wrap { max-width: 1080px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.1rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.25rem; font-weight: 650; }
+h3 { font-size: 1.02rem; font-weight: 650; }
+p { margin: 0; }
+a { color: var(--brand); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand svg { flex: none; color: var(--brand); }
+.brand p { color: var(--muted); font-size: 0.9rem; }
+.theme { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; }
+
+.status { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.status strong { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.status span { color: var(--fg); font-size: 0.92rem; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--line); }
+.tab { background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted); font: 600 0.95rem var(--font-body); padding: 10px 14px; cursor: pointer; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--brand); }
+.panel[hidden] { display: none !important; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 460px) { .fields { grid-template-columns: minmax(0, 1fr); } }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.wide { grid-column: 1 / -1; }
+label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+input, select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+.hint { font-size: 0.8rem; color: var(--muted); }
+.note { font-size: 0.82rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 12px; }
+
+.meter { display: flex; flex-direction: column; gap: 8px; }
+.meter-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.big { font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.bar { height: 10px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--brand); border-radius: 99px; }
+.pair { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.88rem; color: var(--muted); }
+.pair b { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+.tasks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.task { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
+.task.done { background: var(--surface2); }
+.task.done h3 { text-decoration: line-through; color: var(--muted); }
+.task.high:not(.done) { border-color: var(--bad); }
+.task header { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.task p { font-size: 0.88rem; color: var(--muted); }
+.tag { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 4px; padding: 2px 6px; border: 1px solid currentColor; white-space: nowrap; }
+.tag.dzis { background: var(--brand); color: var(--brand-fg); border-color: var(--brand); }
+.tag.projekt { color: var(--warn); }
+.tag.prio-wysoki { color: var(--bad); }
+.tag.prio-średni { color: var(--warn); }
+.tag.prio-niski { color: var(--muted); }
+.tag.ok { color: var(--ok); }
+
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.stat span { font-size: 0.78rem; color: var(--muted); }
+.stat b { font-family: var(--font-display); font-size: 1.35rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stat.good b { color: var(--ok); }
+.stat.bad b { color: var(--bad); }
+.callout { border-radius: 10px; padding: 12px 14px; font-size: 0.9rem; }
+.callout.warn { background: var(--warn-bg); color: var(--fg); border: 1px solid var(--warn); }
+.callout.bad { background: var(--bad-bg); color: var(--fg); border: 1px solid var(--bad); }
+.callout.ok { background: var(--ok-bg); color: var(--fg); border: 1px solid var(--ok); }
+
+.doc { background: #fff; color: #111; border: 1px solid var(--line); border-radius: 6px; padding: 24px; font-family: Georgia, 'Times New Roman', serif; line-height: 1.5; display: flex; flex-direction: column; gap: 12px; }
+.doc h2 { font-family: Georgia, serif; text-align: center; letter-spacing: 0.06em; font-size: 1.2rem; }
+.doc h3 { font-family: Georgia, serif; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.doc p { font-size: 0.95rem; }
+.doc .foot { font-size: 0.75rem; color: #555; border-top: 1px solid #ccc; padding-top: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { background: var(--brand); color: var(--brand-fg); border: 1px solid var(--brand); border-radius: 8px; padding: 9px 14px; font: 600 0.9rem var(--font-body); cursor: pointer; }
+.btn.alt { background: var(--surface); color: var(--fg); border-color: var(--line); }
+.timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.timeline li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 460px) { .timeline li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.timeline time { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; }
+.timeline small { display: block; color: var(--muted); }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; font-size: 0.92rem; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.sources { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; margin: 0; }
+.sources a { overflow-wrap: anywhere; }
+
+@media print {
+  body { background: #fff; padding: 0; }
+  .top, .status, .tabs, .actions, .no-print, .grid > .card:first-child { display: none !important; }
+  .panel { display: none !important; }
+  .panel.print-active { display: block !important; }
+  .grid { display: block; }
+  .doc { border: 0; padding: 0; }
+}
+@media (prefers-reduced-motion: no-preference) { .bar > i { transition: width 0.3s ease; } }
+
+.lic { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-block: 12px; font-size: 0.9rem; }
+.lic > div { min-width: 0; flex: 1 1 260px; }
+.lic form { display: flex; flex-wrap: wrap; gap: 8px; }
+.lic input { min-width: 0; flex: 1 1 160px; font: 500 0.9rem var(--font-mono); padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); text-transform: uppercase; }
+.lock { border: 1px dashed var(--warn); background: var(--warn-bg); border-radius: 10px; padding: 14px; margin-top: 12px; }
+.lock h3 { margin: 0 0 6px; }
+.lock p { margin: 0 0 10px; }
+.btn[disabled], .btn.off { opacity: 0.55; cursor: not-allowed; }
+
+.offer { display: flex; flex-direction: column; gap: 12px; }
+.offer p { margin: 0; }
+.offer-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.offer-cols > div { background: var(--surface2); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.offer-cols ul, .legal ul, .legal ol { margin: 6px 0 0; padding-left: 1.2rem; }
+.buyblock { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.cons { display: flex; gap: 8px; align-items: flex-start; font-size: 0.88rem; }
+.cons input { margin-top: 3px; flex: none; }
+a.btn { display: inline-block; text-decoration: none; }
+a.btn.off { opacity: 0.55; cursor: not-allowed; }
+.site-foot { border-top: 1px solid var(--line); padding-top: 14px; font-size: 0.85rem; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+.site-foot p { margin: 0; }
+.site-foot a, .legal a { color: var(--brand); }
+.legal { max-width: 800px; margin-inline: auto; display: flex; flex-direction: column; gap: 10px; }
+.legal h1 { font-size: 1.7rem; }
+.legal h2 { font-size: 1.05rem; margin-top: 12px; }
+.legal p, .legal li { margin: 0; line-height: 1.6; }
+.legal .meta { color: var(--muted); font-size: 0.85rem; }
+.legal table { width: 100%; border-collapse: collapse; font-size: 0.85rem; display: block; overflow-x: auto; }
+.legal th, .legal td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.legal .missing { background: var(--bad-bg); color: var(--bad); padding: 0 4px; border-radius: 4px; }
+.buyblock { max-width: 100%; }
+.cons span { min-width: 0; overflow-wrap: anywhere; }
+a.btn, .buyblock .btn { white-space: normal; max-width: 100%; text-align: center; }
+.cons { font-weight: 400; color: var(--fg); width: 100%; }
+.cons input.consBox { width: 18px; height: 18px; padding: 0; flex: none; }
+.cons span { flex: 1 1 0; }
+
+</style>
+</head>
+<body>
+<div class="wrap"><p><a href="./">← Najem Gotowy</a></p><main class="legal"><h1>Regulamin serwisu Najem Gotowy</h1>
+<p class="meta">Obowiązuje od 17 października 2026 r.</p>
+
+<h2>§ 1. Postanowienia ogólne</h2>
+<ol>
+<li>Serwis „Najem Gotowy” dostępny pod adresem https://0deatho.github.io/najem-gotowy/ (dalej: „Serwis”) prowadzi Nikodem Michalak (dalej: „Sprzedawca”), osoba fizyczna prowadząca <b>działalność nierejestrowaną</b> w rozumieniu art. 5 ust. 1 ustawy z dnia 6 marca 2018 r. Prawo przedsiębiorców.</li>
+<li>Dane kontaktowe Sprzedawcy: e-mail <b>nikodemmichalak2007@gmail.com</b>, adres korespondencyjny: Mury, 64-320 Buk.</li>
+<li>Regulamin określa zasady korzystania z Serwisu oraz zakupu pełnego dostępu do jego funkcji.</li>
+<li>Konsumentem jest osoba fizyczna dokonująca zakupu niezwiązanego bezpośrednio z jej działalnością gospodarczą lub zawodową (dalej: „Konsument”). Kupującym może być także przedsiębiorca. Przepisy chroniące wyłącznie Konsumentów stosuje się tylko do Konsumentów.</li>
+</ol>
+
+<h2>§ 2. Opis Serwisu i produktu</h2>
+<ol>
+<li>Serwis to aplikacja internetowa działająca w przeglądarce, przeznaczona dla właścicieli lokali wynajmowanych krótkoterminowo w Polsce. Zawiera cztery części: listę kontrolną gotowości na nowe zasady najmu krótkoterminowego, generator regulaminu obiektu dla gości, kalkulator opłacalności najmu oraz zestawienie przepisów i terminów.</li>
+<li><b>Wersja bezpłatna</b> udostępnia bez opłat: trzy pierwsze zadania z listy kontrolnej, podgląd dwóch pierwszych części regulaminu obiektu, pełny kalkulator opłacalności oraz zestawienie przepisów i terminów.</li>
+<li><b>Wersja pełna</b> („Pełny dostęp”) jest treścią cyfrową dostarczaną drogą elektroniczną i obejmuje: pełną listę zadań wraz z wyjaśnieniem wynikającym z danych wpisanych przez użytkownika, pełny tekst regulaminu obiektu (wszystkie części) z możliwością kopiowania i wydruku lub zapisu do PDF, oraz aktualizacje treści Serwisu związane ze zmianami przepisów w okresie dostępu.</li>
+<li>Dane wpisywane przez użytkownika w formularzach Serwisu są przetwarzane w jego przeglądarce i nie są wysyłane do Sprzedawcy.</li>
+<li>Serwis ma charakter informacyjny. <b>Nie stanowi porady prawnej ani podatkowej</b>. Część opisanych wymagań pochodzi z projektu ustawy, który może ulec zmianie. Przed decyzjami prawnymi i podatkowymi zaleca się konsultację z prawnikiem lub księgowym. Aktualny stan prawny, na który przygotowano treści, jest podany w Serwisie.</li>
+</ol>
+
+<h2>§ 3. Wymagania techniczne</h2>
+<p>Do korzystania z Serwisu potrzebna jest przeglądarka internetowa z włączoną obsługą JavaScript i pamięci lokalnej (localStorage) oraz połączenie z internetem po protokole https. Wydruk i zapis do PDF wymagają funkcji drukowania przeglądarki.</p>
+
+<h2>§ 4. Cena i płatności</h2>
+<ol>
+<li>Cena Pełnego dostępu wynosi <b>49 zł</b> za dostęp na 12 miesięcy od dnia zakupu i jest ceną całkowitą. Sprzedawca nie pobiera dodatkowych opłat.</li>
+<li>Płatność jest realizowana jednorazowo przez operatora płatności Autopay S.A. Dostępne metody płatności wyświetla operator na stronie płatności. Sprzedawca nie otrzymuje i nie przechowuje danych karty ani danych logowania do bankowości.</li>
+<li>Kupujący zawiera umowę, klikając przycisk zakupu po zaznaczeniu wymaganych oświadczeń i dokonując płatności. Przycisk jest oznaczony informacją o obowiązku zapłaty.</li>
+</ol>
+
+<h2>§ 5. Dostarczenie dostępu</h2>
+<ol>
+<li>Po zaksięgowaniu płatności Kupujący zostaje przekierowany na stronę podsumowania, na której wyświetla się jego indywidualny kod dostępu (w formacie NG-…) wraz z numerem zamówienia. Zwykle następuje to w ciągu kilku sekund. Kupujący powinien zapisać kod we własnym zakresie.</li>
+<li>Kod wpisuje się w polu „Kod dostępu” w Serwisie. Pełny dostęp jest aktywny przez 12 miesięcy od zakupu; po tym czasie kod przestaje działać, a Serwis wraca do wersji bezpłatnej.</li>
+<li>Kod jest przeznaczony do użytku własnego Kupującego. Nie należy go publikować ani odsprzedawać.</li>
+<li>W razie utraty kodu lub problemów z jego działaniem należy napisać na adres e-mail Sprzedawcy, podając numer zamówienia. Sprzedawca odtworzy kod na podstawie numeru zamówienia po sprawdzeniu płatności.</li>
+</ol>
+
+<h2>§ 6. Prawo odstąpienia od umowy</h2>
+<ol>
+<li>Konsument, który zawarł umowę na odległość, co do zasady może od niej odstąpić w terminie 14 dni bez podawania przyczyny.</li>
+<li>Zgodnie z art. 38 pkt 13 ustawy z dnia 30 maja 2014 r. o prawach konsumenta prawo odstąpienia <b>nie przysługuje</b> w odniesieniu do umowy o dostarczanie treści cyfrowych niedostarczanych na nośniku materialnym, jeżeli spełnianie świadczenia rozpoczęło się za wyraźną zgodą Konsumenta przed upływem terminu do odstąpienia, po poinformowaniu go przez przedsiębiorcę o utracie prawa odstąpienia.</li>
+<li>Przed zakupem Konsument zaznacza oświadczenie, że chce, aby Pełny dostęp został udostępniony natychmiast po zapłacie, i że wie, iż wraz z rozpoczęciem świadczenia traci prawo odstąpienia od umowy. Bez tego oświadczenia przycisk zakupu nie jest aktywny.</li>
+<li>Niezależnie od powyższego Konsument zachowuje prawa z tytułu niezgodności treści cyfrowej z umową (§ 7).</li>
+</ol>
+
+<h2>§ 7. Reklamacje</h2>
+<ol>
+<li>Reklamację można zgłosić e-mailem na adres Sprzedawcy. Należy podać numer zamówienia, opis problemu i oczekiwany sposób rozwiązania.</li>
+<li>Sprzedawca odpowie na reklamację w terminie 14 dni od jej otrzymania.</li>
+<li>Jeżeli treść cyfrowa jest niezgodna z umową (np. kod nie działa, albo funkcje Pełnego dostępu są niedostępne), Konsument może żądać doprowadzenia jej do zgodności z umową. Jeżeli nie jest to możliwe lub Sprzedawca tego nie zrobi w odpowiednim czasie, Konsumentowi przysługują uprawnienia przewidziane w ustawie o prawach konsumenta, w tym obniżenie ceny lub odstąpienie od umowy.</li>
+</ol>
+
+<h2>§ 8. Pozasądowe rozwiązywanie sporów</h2>
+<p>Konsument może skorzystać z pozasądowych sposobów rozpatrywania reklamacji i dochodzenia roszczeń, w szczególności z mediacji, sądu polubownego albo pomocy powiatowego (miejskiego) rzecznika konsumentów. Informacje o tych możliwościach są dostępne na stronie Urzędu Ochrony Konkurencji i Konsumentów (uokik.gov.pl). Skorzystanie z nich jest dobrowolne.</p>
+
+<h2>§ 9. Odpowiedzialność</h2>
+<p>Sprzedawca dokłada starań, aby treści Serwisu były aktualne i rzetelne, ale nie gwarantuje, że spełniają indywidualne potrzeby użytkownika ani że przepisy nie zmienią się po dacie aktualizacji. Odpowiedzialność Sprzedawcy wobec Konsumentów nie jest wyłączana w zakresie, w jakim wyłączenie byłoby niedozwolone przez przepisy prawa.</p>
+
+<h2>§ 10. Dane osobowe</h2>
+<p>Zasady przetwarzania danych osobowych opisuje <a href="polityka-prywatnosci.html">Polityka prywatności</a>.</p>
+
+<h2>§ 11. Zmiany Regulaminu i postanowienia końcowe</h2>
+<ol>
+<li>Sprzedawca może zmienić Regulamin z ważnych powodów, w szczególności zmiany przepisów lub zakresu Serwisu. Zmiany nie dotyczą zamówień złożonych przed ich wprowadzeniem. Aktualny Regulamin jest zawsze dostępny w Serwisie.</li>
+<li>W sprawach nieuregulowanych stosuje się prawo polskie, w tym przepisy Kodeksu cywilnego, ustawy o prawach konsumenta oraz ustawy o świadczeniu usług drogą elektroniczną.</li>
+</ol>
+</main><footer class="site-foot"><p><b>Sprzedawca:</b> Nikodem Michalak, osoba fizyczna prowadząca działalność nierejestrowaną. Kontakt: nikodemmichalak2007@gmail.com.</p><p><a href="./">Wróć do narzędzia</a> · <a href="regulamin.html">Regulamin</a> · <a href="polityka-prywatnosci.html">Polityka prywatności</a></p></footer></div>
+</body>
+</html>
