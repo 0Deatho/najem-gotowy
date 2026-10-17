@@ -170,6 +170,8 @@ a.btn, .buyblock .btn { white-space: normal; max-width: 100%; text-align: center
 .cons { font-weight: 400; color: var(--fg); width: 100%; }
 .cons input.consBox { width: 18px; height: 18px; padding: 0; flex: none; }
 .cons span { flex: 1 1 0; }
+#kontakt .kv > div { display: contents; } #kontakt .kv dd { text-align: left; font-weight: 500; } #kontakt .kv { grid-template-columns: minmax(110px, 160px) minmax(0, 1fr); }
+#kontakt .kv dd, #kontakt .kv dt { min-width: 0; overflow-wrap: anywhere; } @media (max-width: 460px) { #kontakt .kv { grid-template-columns: minmax(0, 1fr); gap: 0 } #kontakt .kv dd { margin-bottom: 8px } }
 
 </style>
 <div class="wrap">
@@ -286,9 +288,24 @@ a.btn, .buyblock .btn { white-space: normal; max-width: 100%; text-align: center
     <div id="buyBox" class="no-print"></div>
   </section>
 
+  <section class="card offer" id="kontakt" aria-labelledby="kontakt-h">
+    <h2 id="kontakt-h">Sprzedawca i kontakt</h2>
+    <dl class="kv">
+      <div><dt>Sprzedawca</dt><dd>Nikodem Michalak, osoba fizyczna prowadząca działalność nierejestrowaną (art. 5 ust. 1 ustawy Prawo przedsiębiorców)</dd></div>
+      <div><dt>E-mail</dt><dd><a href="mailto:nikodemmichalak2007@gmail.com">nikodemmichalak2007@gmail.com</a></dd></div>
+      <div><dt>Adres</dt><dd>Mury, 64-320 Buk</dd></div>
+      <div><dt>Produkt</dt><dd>Najem Gotowy, Pełny dostęp na 12 miesięcy, treść cyfrowa dostarczana online</dd></div>
+      <div><dt>Cena</dt><dd>49 zł, płatność jednorazowa, bez dodatkowych opłat</dd></div>
+      <div><dt>Płatności</dt><dd>Obsługuje Autopay S.A.; dostępne metody wyświetla operator na stronie płatności</dd></div>
+      <div><dt>Dostawa</dt><dd>Natychmiast po zapłacie: kod dostępu wyświetlany na stronie podsumowania</dd></div>
+      <div><dt>Reklamacje i zwroty</dt><dd>E-mail na adres powyżej, odpowiedź w ciągu 14 dni; szczegóły w Regulaminie (§ 6 i § 7)</dd></div>
+    </dl>
+    <p class="note"><a href="regulamin.html">Regulamin</a> · <a href="polityka-prywatnosci.html">Polityka prywatności</a></p>
+  </section>
+
   <footer class="site-foot no-print">
     <p><b>Sprzedawca:</b> Nikodem Michalak, osoba fizyczna prowadząca działalność nierejestrowaną (art. 5 ust. 1 Prawa przedsiębiorców). Kontakt: <a href="mailto:nikodemmichalak2007@gmail.com">nikodemmichalak2007@gmail.com</a>, adres korespondencyjny: Mury, 64-320 Buk.</p>
-    <p><a href="regulamin.html">Regulamin</a> · <a href="polityka-prywatnosci.html">Polityka prywatności</a></p>
+    <p><a href="regulamin.html">Regulamin</a> · <a href="polityka-prywatnosci.html">Polityka prywatności</a> · <a href="#kontakt">Kontakt</a></p>
   </footer>
 </div>
 <script>
